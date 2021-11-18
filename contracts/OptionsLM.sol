@@ -816,11 +816,22 @@ interface v3oracle {
 }
 
 contract OptionsLM is ERC721 {
+    // the token being rewarded to the LP? (eg, FOREX or RNBW)
     address public immutable reward;
+
+    /**
+    the token used by LP to stake which will in turn earn the options as reward
+    ex: fxToken:USDC LP token
+     */
     address public immutable stake;
+
+    // the token that the LP can use to purchase `reward`?
     address public immutable buyWith;
+
+    // need to make this into a mutable var that can be set by `owner` with housekeeping funcs (add, remove, set) callable by onlyOwner (multisig)
     address public immutable treasury;
 
+    // make this settable onlyOwner
     v3oracle constant oracle =
         v3oracle(0x0F1f5A87f99f0918e6C81F16E59F3518698221Ff);
 
@@ -911,18 +922,24 @@ contract OptionsLM is ERC721 {
         _deposit(erc20(stake).balanceOf(msg.sender), recipient);
     }
 
+    // deposit using total balance of msg.sender's stake token
     function deposit() external {
         _deposit(erc20(stake).balanceOf(msg.sender), msg.sender);
     }
 
+    // deposit using an amount of msg.sender's stake token
     function deposit(uint256 amount) external {
         _deposit(amount, msg.sender);
     }
 
+    // deposit using an amount of msg.sender's stake token and send it to recipient
     function deposit(uint256 amount, address recipient) external {
         _deposit(amount, recipient);
     }
 
+    /**
+    internal func for all deposits
+     */
     function _deposit(uint256 amount, address to) internal update(to) {
         _totalSupply += amount;
         _balanceOf[to] += amount;
@@ -930,6 +947,7 @@ contract OptionsLM is ERC721 {
         emit Deposit(msg.sender, amount);
     }
 
+    // same wrapper funcs as _deposit
     function withdraw() external {
         _withdraw(_balanceOf[msg.sender], msg.sender);
     }
@@ -953,6 +971,7 @@ contract OptionsLM is ERC721 {
         emit Withdraw(msg.sender, amount);
     }
 
+    // claim option
     function _claim(uint256 amount) internal {
         // calculate strike price to store in options array
         uint256 _strike = oracle.assetToAsset(reward, amount, buyWith, 3600);
@@ -970,6 +989,7 @@ contract OptionsLM is ERC721 {
         nextIndex++;
     }
 
+    // execute option
     function redeem(uint256 id) external {
         require(_isApprovedOrOwner(msg.sender, id));
         option storage _opt = options[id];
