@@ -932,7 +932,10 @@ contract OptionsLM is ERC721 {
         _deposit(amount, msg.sender);
     }
 
-    // deposit using an amount of msg.sender's stake token and send it to recipient
+    /**
+    deposit using an amount of msg.sender's stake token and send it to recipient
+    means deposit on behalf of someone else and give that someone else your LP tokens
+     */
     function deposit(uint256 amount, address recipient) external {
         _deposit(amount, recipient);
     }
@@ -990,6 +993,9 @@ contract OptionsLM is ERC721 {
     }
 
     // execute option
+    /**
+    what happens to the minted NFT from _claim()...?
+     */
     function redeem(uint256 id) external {
         require(_isApprovedOrOwner(msg.sender, id));
         option storage _opt = options[id];
